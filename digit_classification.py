@@ -15,8 +15,8 @@ def main():
     y_data = digits_data.target
 
     # Define parameter ranges
-    gamma_values = [0.001, 0.01, 0.1, 1, 10, 100]
-    C_values = [0.1, 1, 2, 5, 10, 20]
+    gamma_values = [0.001, 0.01, 0.1, 1, 100]
+    C_values = [0.1, 1, 2, 5, 10]
     all_param_combinations = list(itertools.product(gamma_values, C_values))
 
     # Define test and dev set sizes
@@ -36,9 +36,10 @@ def main():
         test_accuracy = metrics.accuracy_score(y_pred=test_predictions, y_true=Y_test)
 
         # Print results
+        print(f'Training Size: {1 - (test_frac + dev_frac):.2f}  Test Size: {test_frac:.2f}  Dev Size: {dev_frac:.2f}')
         print(
-            f'Training Size:{1 - (test_frac + dev_frac)} Test Size:{test_frac} Dev Size:{dev_frac} Train Acc:{train_metric} Test Acc:{test_accuracy} Val Acc:{validation_metric}')
-        print(f'SVM model Metrics with gamma:{best_gamma} and C:{best_C}')
+            f'Training Accuracy: {train_metric:.4f}  Test Accuracy: {test_accuracy:.4f}  Validation Accuracy: {validation_metric:.4f}')
+        print(f'SVM model Metrics with gamma: {best_gamma:.3f} and C: {best_C:.3f}\n')  # Added '\n' for a new line
 
 
 if __name__ == '__main__':
