@@ -5,41 +5,40 @@ from utils import hyperparameter_tuning, prepare_data_splits
 
 def main():
 
-
     # Load the digits dataset
-    digits = datasets.load_digits()
+    digits_data = datasets.load_digits()
 
     # Flatten the images
-    n_samples = len(digits.images)
-    data = digits.images.reshape((n_samples, -1))
-    X = data
-    y = digits.target
+    n_samples = len(digits_data.images)
+    flattened_data = digits_data.images.reshape((n_samples, -1))
+    X_data = flattened_data
+    y_data = digits_data.target
 
     # Define parameter ranges
-    gamma_ranges = [0.001, 0.01, 0.1, 1, 100]
-    C_ranges = [0.1, 1, 2, 5, 10]
-    list_of_all_param_combination = list(itertools.product(gamma_ranges, C_ranges))
+    gamma_values = [0.001, 0.01, 0.1, 1, 10, 100]
+    C_values = [0.1, 1, 2, 5, 10, 20]
+    all_param_combinations = list(itertools.product(gamma_values, C_values))
 
     # Define test and dev set sizes
-    test_size = [0.1, 0.2, 0.3]
-    dev_size = [0.1, 0.2, 0.3]
-    list_of_size = list(itertools.product(test_size, dev_size))
+    test_sizes = [0.1, 0.2, 0.3]
+    dev_sizes = [0.1, 0.2, 0.3]
+    size_combinations = list(itertools.product(test_sizes, dev_sizes))
 
-    for test_frac, dev_frac in list_of_size:
+    for test_frac, dev_frac in size_combinations:
         # Split the data into train, dev, and test sets
-        X_train, Y_train, X_dev, Y_dev, X_test, Y_test = prepare_data_splits(X, y, test_frac, dev_frac)
+        X_train, Y_train, X_dev, Y_dev, X_test, Y_test = prepare_data_splits(X_data, y_data, test_frac, dev_frac)
 
         # Tune hyperparameters
-        model, gamma, C, cur_metric, train_metric = hyperparameter_tuning(X_train, Y_train, X_dev, Y_dev, list_of_all_param_combination)
+        trained_model, best_gamma, best_C, validation_metric, train_metric = hyperparameter_tuning(X_train, Y_train, X_dev, Y_dev, all_param_combinations)
 
         # Predict on the test set
-        pred_test_result = model.predict(X_test)
-        test_metrix = metrics.accuracy_score(y_pred=pred_test_result, y_true=Y_test)
+        test_predictions = trained_model.predict(X_test)
+        test_accuracy = metrics.accuracy_score(y_pred=test_predictions, y_true=Y_test)
 
         # Print results
         print(
-        f'Training Size:{1 - (test_frac + dev_frac)} Test Size:{test_frac} Dev Size:{dev_frac} Train Acc:{train_metric} Test Acc:{test_metrix} Val Acc:{cur_metric}')
-        print(f' SVM model Metrix with gamma:{gamma} and C:{C}')
+            f'Training Size:{1 - (test_frac + dev_frac)} Test Size:{test_frac} Dev Size:{dev_frac} Train Acc:{train_metric} Test Acc:{test_accuracy} Val Acc:{validation_metric}')
+        print(f'SVM model Metrics with gamma:{best_gamma} and C:{best_C}')
 
 
 if __name__ == '__main__':

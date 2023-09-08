@@ -2,41 +2,37 @@ import itertools
 from sklearn.model_selection import train_test_split
 from sklearn import svm, metrics
 
-
-
-
-def prepare_data_splits(data, label, test_frac, dev_frac):
+def prepare_data_splits(data, labels, test_fraction, dev_fraction):
     X_train_dev, X_test, Y_train_dev, Y_test = train_test_split(
-        data, label, test_size=test_frac, shuffle=True
+        data, labels, test_size=test_fraction, shuffle=True
     )
     X_train, X_dev, Y_train, Y_dev = train_test_split(
-        X_train_dev, Y_train_dev, test_size=dev_frac, shuffle=True
+        X_train_dev, Y_train_dev, test_size=dev_fraction, shuffle=True
     )
     return X_train, Y_train, X_dev, Y_dev, X_test, Y_test
 
-
-def hyperparameter_tuning(X_train, Y_train, X_dev, Y_dev, list_of_all_param_combination):
-    best_acc_so_far = -1
-    best_train_metric = -1
+def hyperparameter_tuning(X_train, Y_train, X_dev, Y_dev, param_combinations):
+    best_accuracy = -1
+    best_train_accuracy = -1
     best_model = None
-    b_gamma = None
-    b_C = None
+    best_gamma = None
+    best_C = None
 
-    for gamma, C in list_of_all_param_combination:
+    for gamma, C in param_combinations:
         model = svm.SVC(C=C, gamma=gamma)
         model.fit(X_train, Y_train)
 
         predicted_dev = model.predict(X_dev)
-        cur_metric = metrics.accuracy_score(y_pred=predicted_dev, y_true=Y_dev)
+        current_accuracy = metrics.accuracy_score(y_pred=predicted_dev, y_true=Y_dev)
 
         predicted_train = model.predict(X_train)
-        train_metric = metrics.accuracy_score(y_pred=predicted_train, y_true=Y_train)
+        train_accuracy = metrics.accuracy_score(y_pred=predicted_train, y_true=Y_train)
 
-        if cur_metric > best_acc_so_far:
-            best_acc_so_far = cur_metric
-            best_train_metric = train_metric
+        if current_accuracy > best_accuracy:
+            best_accuracy = current_accuracy
+            best_train_accuracy = train_accuracy
             best_model = model
-            b_gamma = gamma
-            b_C = C
+            best_gamma = gamma
+            best_C = C
 
-    return best_model, b_gamma, b_C, best_acc_so_far, best_train_metric
+    return best_model, best_gamma, best_C, best_accuracy, best_train_accuracy
