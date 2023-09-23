@@ -4,29 +4,29 @@ from sklearn import datasets, metrics, svm
 from utils import hyperparameter_tuning, prepare_data_splits
 
 def main():
-
     # Load the digits dataset
     digits_data = datasets.load_digits()
 
-    # Flatten the images
-    n_samples = len(digits_data.images)
-    flattened_data = digits_data.images.reshape((n_samples, -1))
-    X_data = flattened_data
-    y_data = digits_data.target
-
-    # Define parameter ranges
-    gamma_values = [0.001, 0.01, 0.1, 1, 100]
-    C_values = [0.1, 1, 2, 5, 10]
-    all_param_combinations = list(itertools.product(gamma_values, C_values))
-
     # Define test and dev set sizes
-    test_sizes = [0.1, 0.2, 0.3]
-    dev_sizes = [0.1, 0.2, 0.3]
-    size_combinations = list(itertools.product(test_sizes, dev_sizes))
+    test_size = 0.2
+    dev_size = 0.1
 
-    for test_frac, dev_frac in size_combinations:
+    # Iterate over different image sizes
+    for image_size in [4, 6, 8]:
+        # Resize the images
+        n_samples = len(digits_data.images)
+        resized_data = [plt.imread(image) for image in digits_data.images]
+        flattened_data = [plt.imresize(image, (image_size, image_size)) for image in resized_data]
+        X_data = [image.reshape(-1) for image in flattened_data]
+        y_data = digits_data.target
+
+        # Define parameter ranges
+        gamma_values = [0.001, 0.01, 0.1, 1, 100]
+        C_values = [0.1, 1, 2, 5, 10]
+        all_param_combinations = list(itertools.product(gamma_values, C_values))
+
         # Split the data into train, dev, and test sets
-        X_train, Y_train, X_dev, Y_dev, X_test, Y_test = prepare_data_splits(X_data, y_data, test_frac, dev_frac)
+        X_train, Y_train, X_dev, Y_dev, X_test, Y_test = prepare_data_splits(X_data, y_data, test_size, dev_size)
 
         # Tune hyperparameters
         trained_model, best_gamma, best_C, validation_metric, train_metric = hyperparameter_tuning(X_train, Y_train, X_dev, Y_dev, all_param_combinations)
@@ -36,11 +36,8 @@ def main():
         test_accuracy = metrics.accuracy_score(y_pred=test_predictions, y_true=Y_test)
 
         # Print results
-        print(f'Training Size: {1 - (test_frac + dev_frac):.2f}  Test Size: {test_frac:.2f}  Dev Size: {dev_frac:.2f}')
-        print(
-            f'Training Accuracy: {train_metric:.4f}  Test Accuracy: {test_accuracy:.4f}  Validation Accuracy: {validation_metric:.4f}')
-        print(f'SVM model Metrics with gamma: {best_gamma:.3f} and C: {best_C:.3f}\n')  # Added '\n' for a new line
-
+        print(f'image size: {image_size}x{image_size} train_size: {1 - (test_size + dev_size):.1f} dev_size: {dev_size} test_size: {test_size} '
+              f'train_acc: {train_metric:.4f} dev_acc: {validation_metric:.4f} test_acc: {test_accuracy:.4f}')
 
 if __name__ == '__main__':
     main()
