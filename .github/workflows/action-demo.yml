@@ -16,10 +16,15 @@ jobs:
       - run: echo "🖥️ The workflow is now ready to test your code on the runner."
       - name: List files in the repository
         run: |
-          ls -r ${{ github.workspace }}
+          ls -R ${{ github.workspace }}  # Corrected flag from -r to -R
       - run: echo "🍏 This job's status is ${{ job.status }}."
-      - name: Install dep
-        run:  pip3 install --no-cache-dir -r requirements.txt
+      - name: Install dependencies
+        run: |
+          pip3 install --no-cache-dir -r requirements.txt
       - name: Run test cases
-        run:
+        run: |
           python digit_classification.py
+
+      # Add a new echo statement below
+      - run: echo "Code changes for Quiz"
+
