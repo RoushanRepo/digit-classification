@@ -2,6 +2,7 @@ import itertools
 import matplotlib.pyplot as plt
 from sklearn import datasets, metrics, svm
 from utils import hyperparameter_tuning, prepare_data_splits
+import numpy as np  # Import NumPy
 
 def main():
     # Load the digits dataset
@@ -15,9 +16,8 @@ def main():
     for image_size in [4, 6, 8]:
         # Resize the images
         n_samples = len(digits_data.images)
-        resized_data = [plt.imread(image) for image in digits_data.images]
-        flattened_data = [plt.imresize(image, (image_size, image_size)) for image in resized_data]
-        X_data = [image.reshape(-1) for image in flattened_data]
+        resized_data = np.array([np.resize(image, (image_size, image_size)) for image in digits_data.images])
+        X_data = resized_data.reshape((n_samples, -1))
         y_data = digits_data.target
 
         # Define parameter ranges
