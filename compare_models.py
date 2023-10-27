@@ -1,49 +1,71 @@
-# Import necessary libraries
 import numpy as np
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
-from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report, roc_curve, roc_auc_score
+import matplotlib.pyplot as plt
 
-# Load the MNIST dataset (example dataset)
-digits = datasets.load_digits()
-X = digits.data
-y = digits.target
+def main():
+    # Load the digits dataset
+    digits_data = datasets.load_digits()
 
-# Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    # Split the data into features (X) and labels (y)
+    X = digits_data.data
+    y = digits_data.target
 
-# Train the production model (SVM)
-prod_model = SVC()
-prod_model.fit(X_train, y_train)
+    # Split the data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Train the candidate model (Decision Tree)
-candidate_model = DecisionTreeClassifier()
-candidate_model.fit(X_train, y_train)
+    # Create a Decision Tree classifier
+    decision_tree = DecisionTreeClassifier()
+    # Train the Decision Tree model
+    decision_tree.fit(X_train, y_train)
+    # Make predictions
+    y_dt_pred = decision_tree.predict(X_test)
 
-# Make predictions using both models
-prod_predictions = prod_model.predict(X_test)
-candidate_predictions = candidate_model.predict(X_test)
+    # Create an SVM classifier
+    svm_classifier = SVC()
+    # Train the SVM model
+    svm_classifier.fit(X_train, y_train)
+    # Make predictions
+    y_svm_pred = svm_classifier.predict(X_test)
 
-# Calculate accuracies
-prod_accuracy = accuracy_score(y_test, prod_predictions)
-candidate_accuracy = accuracy_score(y_test, candidate_predictions)
+    # Compare Decision Tree and SVM models
+    compare_models(y_test, y_dt_pred, "Decision Tree")
+    compare_models(y_test, y_svm_pred, "SVM")
 
-# Calculate confusion matrices
-confusion_matrix_all = confusion_matrix(y_test, prod_predictions, labels=range(10))
-confusion_matrix_diff = confusion_matrix(y_test, [int(p1 != p2) for p1, p2 in zip(prod_predictions, candidate_predictions)])
+def compare_models(y_true, y_pred, model_name):
+    results = []
 
-# Calculate F1 scores
-f1_macro_prod = f1_score(y_test, prod_predictions, average='macro')
-f1_macro_candidate = f1_score(y_test, candidate_predictions, average='macro')
+    results.append(f"Results for {model_name}:")
+    accuracy = accuracy_score(y_true, y_pred)
+    precision = precision_score(y_true, y_pred, average='weighted')
+    recall = recall_score(y_true, y_pred, average='weighted')
+    f1 = f1_score(y_true, y_pred, average='weighted')
 
-# Output the results
-print("Production model's accuracy:", prod_accuracy)
-print("Candidate model's accuracy:", candidate_accuracy)
-print("Confusion matrix between production and candidate models:")
-print(confusion_matrix_all)
-print("Confusion matrix for samples predicted correctly in production but not in candidate:")
-print(confusion_matrix_diff)
-print("Production model's macro-average F1 score:", f1_macro_prod)
-print("Candidate model's macro-average F1 score:", f1_macro_candidate)
+    results.append(f"Accuracy: {accuracy:.2f}")
+    results.append(f"Precision: {precision:.2f}")
+    results.append(f"Recall: {recall:.2f}")
+    results.append(f"F1 Score: {f1:.2f}")
+
+    # Classification report
+    results.append("Classification Report:")
+    results.append(classification_report(y_true, y_pred))
+
+    # ROC Curve and AUC (for binary classification tasks)
+    if len(np.unique(y_true)) == 2:
+        fpr, tpr, _ = roc_curve(y_true, y_pred)
+        auc = roc_auc_score(y_true, y_pred)
+
+        results.append(f"ROC AUC: {auc:.2f}")
+
+    results.append("===================================")
+
+    # Save the results to a text file
+    with open(f"{model_name}_results.txt", "w") as file:
+        for line in results:
+            file.write(line + "\n")
+
+if __name__ == "__main":
+    main()
