@@ -20,8 +20,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install -r requirements.txt  # Add this if you have a requirements file
-        pip install scikit-learn matplotlib
+        pip install -r requirements.txt  
 
     - name: Run the script
       run: python compare_models.py
