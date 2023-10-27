@@ -3,7 +3,7 @@ name: Model Comparison
 on:
   push:
     branches:
-      - main
+      - feature/quiz2
 
 jobs:
   build:
