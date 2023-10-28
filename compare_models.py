@@ -4,11 +4,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report, roc_curve, roc_auc_score
-import matplotlib.pyplot as plt
 
 def main():
     # Load the digits dataset
     digits_data = datasets.load_digits()
+    print("Digits dataset loaded.")
 
     # Split the data into features (X) and labels (y)
     X = digits_data.data
@@ -24,6 +24,8 @@ def main():
     # Make predictions
     y_dt_pred = decision_tree.predict(X_test)
 
+    print("Decision Tree model trained and predictions made.")
+
     # Create an SVM classifier
     svm_classifier = SVC()
     # Train the SVM model
@@ -31,9 +33,13 @@ def main():
     # Make predictions
     y_svm_pred = svm_classifier.predict(X_test)
 
+    print("SVM model trained and predictions made.")
+
     # Compare Decision Tree and SVM models
     compare_models(y_test, y_dt_pred, "Decision Tree")
     compare_models(y_test, y_svm_pred, "SVM")
+
+    print("Comparison completed.")
 
 def compare_models(y_true, y_pred, model_name):
     results = []
@@ -67,5 +73,6 @@ def compare_models(y_true, y_pred, model_name):
         for line in results:
             file.write(line + "\n")
 
-if __name__ == "__main":
+
+if __name__ == '__main__':
     main()
