@@ -19,23 +19,26 @@ def main():
 
     # Create a Decision Tree classifier
     decision_tree = DecisionTreeClassifier()
+    print("Training Decision Tree model...")
     # Train the Decision Tree model
     decision_tree.fit(X_train, y_train)
+    print("Decision Tree model trained.")
     # Make predictions
     y_dt_pred = decision_tree.predict(X_test)
-
-    print("Decision Tree model trained and predictions made.")
+    print("Decision Tree predictions made.")
 
     # Create an SVM classifier
     svm_classifier = SVC()
+    print("Training SVM model...")
     # Train the SVM model
     svm_classifier.fit(X_train, y_train)
+    print("SVM model trained.")
     # Make predictions
     y_svm_pred = svm_classifier.predict(X_test)
-
-    print("SVM model trained and predictions made.")
+    print("SVM predictions made.")
 
     # Compare Decision Tree and SVM models
+    print("Comparing models...")
     compare_models(y_test, y_dt_pred, "Decision Tree")
     compare_models(y_test, y_svm_pred, "SVM")
 
@@ -68,11 +71,9 @@ def compare_models(y_true, y_pred, model_name):
 
     results.append("===================================")
 
-    # Save the results to a text file
-    with open(f"{model_name}_results.txt", "w") as file:
-        for line in results:
-            file.write(line + "\n")
-
+    # Print results to the console
+    for line in results:
+        print(line)
 
 if __name__ == '__main__':
     main()
