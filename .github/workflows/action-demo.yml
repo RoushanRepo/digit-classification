@@ -24,12 +24,3 @@ jobs:
 
     - name: Run the script
       run: python compare_models.py
-
-    - name: Upload results
-      if: always()
-      uses: actions/upload-artifact@v2
-      with:
-        name: comparison-results
-        path: |
-          Decision_Tree_results.txt
-          SVM_results.txt
