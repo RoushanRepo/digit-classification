@@ -2,31 +2,30 @@ import itertools
 import matplotlib.pyplot as plt
 from sklearn import datasets, metrics, svm
 from utils import hyperparameter_tuning, prepare_data_splits
-import numpy as np  # Import NumPy
 
 def main():
     # Load the digits dataset
     digits_data = datasets.load_digits()
 
+    # Flatten the images
+    n_samples = len(digits_data.images)
+    flattened_data = digits_data.images.reshape((n_samples, -1))
+    X_data = flattened_data
+    y_data = digits_data.target
+
+    # Define parameter ranges
+    gamma_values = [0.001, 0.01, 0.1, 1, 100]
+    C_values = [0.1, 1, 2, 5, 10]
+    all_param_combinations = list(itertools.product(gamma_values, C_values))
+
     # Define test and dev set sizes
-    test_size = 0.2
-    dev_size = 0.1
+    test_sizes = [0.1, 0.2, 0.3]
+    dev_sizes = [0.1, 0.2, 0.3]
+    size_combinations = list(itertools.product(test_sizes, dev_sizes))
 
-    # Iterate over different image sizes
-    for image_size in [4, 6, 8]:
-        # Resize the images
-        n_samples = len(digits_data.images)
-        resized_data = np.array([np.resize(image, (image_size, image_size)) for image in digits_data.images])
-        X_data = resized_data.reshape((n_samples, -1))
-        y_data = digits_data.target
-
-        # Define parameter ranges
-        gamma_values = [0.001, 0.01, 0.1, 1, 100]
-        C_values = [0.1, 1, 2, 5, 10]
-        all_param_combinations = list(itertools.product(gamma_values, C_values))
-
+    for test_frac, dev_frac in size_combinations:
         # Split the data into train, dev, and test sets
-        X_train, Y_train, X_dev, Y_dev, X_test, Y_test = prepare_data_splits(X_data, y_data, test_size, dev_size)
+        X_train, Y_train, X_dev, Y_dev, X_test, Y_test = prepare_data_splits(X_data, y_data, test_frac, dev_frac)
 
         # Tune hyperparameters
         trained_model, best_gamma, best_C, validation_metric, train_metric = hyperparameter_tuning(X_train, Y_train, X_dev, Y_dev, all_param_combinations)
@@ -35,9 +34,14 @@ def main():
         test_predictions = trained_model.predict(X_test)
         test_accuracy = metrics.accuracy_score(y_pred=test_predictions, y_true=Y_test)
 
-        # Print results
-        print(f'image size: {image_size}x{image_size} train_size: {1 - (test_size + dev_size):.1f} dev_size: {dev_size} test_size: {test_size} '
-              f'train_acc: {train_metric:.4f} dev_acc: {validation_metric:.4f} test_acc: {test_accuracy:.4f}')
+        # Calculate precision, recall, F1-score, and support
+        precision, recall, f1_score, _ = metrics.precision_recall_fscore_support(y_true=Y_test, y_pred=test_predictions, average='weighted')
 
-if __name__ == '__main__':
+        # Print results
+        print(f'Training Size: {1 - (test_frac + dev_frac):.2f}  Test Size: {test_frac:.2f}  Dev Size: {dev_frac:.2f}')
+        print(f'Training Accuracy: {train_metric:.4f}  Test Accuracy: {test_accuracy:.4f}  Validation Accuracy: {validation_metric:.4f}')
+        print(f'Precision: {precision:.4f}  Recall: {recall:.4f}  F1 Score: {f1_score:.4f}')
+        print(f'SVM model Metrics with gamma: {best_gamma:.3f} and C: {best_C:.3f}\n')
+
+if __name__ == "__main__":
     main()
