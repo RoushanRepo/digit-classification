@@ -1,43 +1,55 @@
-import itertools
-import matplotlib.pyplot as plt
-from sklearn import datasets, metrics, svm
-from utils import hyperparameter_tuning, prepare_data_splits
-import numpy as np  # Import NumPy
+import base64
+from flask import Flask, request, jsonify
+from PIL import Image
+import io
+import numpy as np
+from sklearn import datasets, svm
+from utils import prepare_data_splits
 
-def main():
-    # Load the digits dataset
-    digits_data = datasets.load_digits()
+app = Flask(__name__)
 
-    # Define test and dev set sizes
-    test_size = 0.2
-    dev_size = 0.1
+# Load the digits dataset
+digits_data = datasets.load_digits()
+X_data = digits_data.data
+y_data = digits_data.target
 
-    # Iterate over different image sizes
-    for image_size in [4, 6, 8]:
-        # Resize the images
-        n_samples = len(digits_data.images)
-        resized_data = np.array([np.resize(image, (image_size, image_size)) for image in digits_data.images])
-        X_data = resized_data.reshape((n_samples, -1))
-        y_data = digits_data.target
+# Train an SVM model for digit classification
+clf = svm.SVC(gamma=0.001, C=100)
+clf.fit(X_data, y_data)
 
-        # Define parameter ranges
-        gamma_values = [0.001, 0.01, 0.1, 1, 100]
-        C_values = [0.1, 1, 2, 5, 10]
-        all_param_combinations = list(itertools.product(gamma_values, C_values))
+def preprocess_base64_image(base64_data):
+    # Decode base64 data to binary
+    image_data = base64.b64decode(base64_data)
+    image = Image.open(io.BytesIO(image_data))
+    # Resize the image to match the dataset's image size
+    image = image.resize((8, 8))
+    image = np.array(image)
+    return image
 
-        # Split the data into train, dev, and test sets
-        X_train, Y_train, X_dev, Y_dev, X_test, Y_test = prepare_data_splits(X_data, y_data, test_size, dev_size)
+@app.route('/predict', methods=['POST'])
+def compare_images():
+    try:
+        data = request.get_json()
+        base64_image1 = data.get('image1')
+        base64_image2 = data.get('image2')
 
-        # Tune hyperparameters
-        trained_model, best_gamma, best_C, validation_metric, train_metric = hyperparameter_tuning(X_train, Y_train, X_dev, Y_dev, all_param_combinations)
+        if not base64_image1 or not base64_image2:
+            return jsonify({"result": "Invalid input"}), 400
 
-        # Predict on the test set
-        test_predictions = trained_model.predict(X_test)
-        test_accuracy = metrics.accuracy_score(y_pred=test_predictions, y_true=Y_test)
+        # Preprocess the images
+        image1 = preprocess_base64_image(base64_image1)
+        image2 = preprocess_base64_image(base64_image2)
 
-        # Print results
-        print(f'image size: {image_size}x{image_size} train_size: {1 - (test_size + dev_size):.1f} dev_size: {dev_size} test_size: {test_size} '
-              f'train_acc: {train_metric:.4f} dev_acc: {validation_metric:.4f} test_acc: {test_accuracy:.4f}')
+        # Predict the digit labels for both images
+        digit1 = clf.predict(image1.reshape(1, -1))[0]
+        digit2 = clf.predict(image2.reshape(1, -1))[0]
+
+        # Compare the predicted digits
+        result = digit1 == digit2
+
+        return jsonify({"result": result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    main()
+    app.run(debug=True)
