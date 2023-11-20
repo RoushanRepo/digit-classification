@@ -1,56 +1,30 @@
 from flask import Flask, request, jsonify
 import joblib
+from PIL import Image
 import numpy as np
+from io import BytesIO
+
+# Load the model
+# model = joblib.load('/digits/API/best_model.pkl')
+model = joblib.load('model.pkl')
 
 app = Flask(__name__)
 
-# Load the trained model
-model_path = '/app/model/model.pkl'
-try:
-    trained_model = joblib.load(model_path)
-    print("Model loaded successfully.")
-except Exception as e:
-    print(f"Error loading the model: {str(e)}")
-    trained_model = None
+@app.route('/predict_digit', methods=['POST'])
+def predict_digit_endpoint():
+    if 'image' not in request.files:
+        return jsonify(error='Please provide an image.'), 400
 
-def compare_images(image1, image2):
-    # Convert input strings to NumPy arrays
-    image1_array = np.array(image1, dtype=float)
-    image2_array = np.array(image2, dtype=float)
-
-    # Flatten the arrays to 1D
-    image1_array = image1_array.flatten()
-    image2_array = image2_array.flatten()
-
-    # Use the trained model to predict if the images are the same or different
-    prediction = trained_model.predict([image1_array, image2_array])
-
-    return prediction[0]
-
-
-@app.route('/predict', methods=['POST'])
-def compare_images_endpoint():
-    try:
-        print("Request Received")
-        data = request.get_json()
-        
-        image1 = data['image1']
-        image2 = data['image2']
-
-        result = compare_images(image1, image2)
-        
-
-        response = {'result': 'Same' if result == 1 else 'Different'}
-        return jsonify(response)
-
-    except Exception as e:
-        return jsonify({'error': str(e)})
+    image_bytes = request.files['image'].read()
+    image = Image.open(BytesIO(image_bytes)).convert('L')
+    resized_image = image.resize((8, 8), Image.LANCZOS)
     
-@app.route('/')
-def home():
-    return 'Hello, ML Model App!'
+    image_array = np.array(resized_image).reshape(1, -1)
+    prediction = model.predict(image_array)
+
+    return jsonify(predicted_digit=int(prediction[0]))
 
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=80, debug=True)
 
+if __name__ == '__main__':
+    app.run(debug=True)
