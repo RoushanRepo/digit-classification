@@ -27,8 +27,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install --no-cache-dir -r requirements.txt
 
-      - name: Run pytest for test_train_model.py
-        run: pytest -k test_train_model.py
+      - name: Run pytest
+        run: pytest
 
       - name: Run train_model.py
         run: python train_model.py
