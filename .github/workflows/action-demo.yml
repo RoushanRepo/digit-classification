@@ -1,26 +1,35 @@
 name: GitHub Actions Demo
-on: [push]
+
+on:
+  push:
+    branches:
+      - feature/final_exam  
+
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
         python-version: [3.8.1]
+
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
+      - name: Checkout repository
         uses: actions/checkout@v2
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: 'x64'
+
+      - name: Install dependencies
         run: |
-          ls -r ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
-      - name: Install dep
-        run: pip3 install --no-cache-dir -r requirements.txt
-      - name: Run pytest
-        run: pytest
-      - name: Run Test Cases
-        run: python train_model.py 
+          python -m pip install --upgrade pip
+          pip install --no-cache-dir -r requirements.txt
+
+      - name: Run pytest for test_train_model.py
+        run: pytest -k test_train_model.py
+
+      - name: Run train_model.py
+        run: python train_model.py
