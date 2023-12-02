@@ -1,0 +1,12 @@
+# Use the Dependency Image as the base image
+FROM dependencyimage:latest
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the application code to the working directory
+COPY . .
+
+# Run unit tests using pytest
+CMD ["pytest"]
+
